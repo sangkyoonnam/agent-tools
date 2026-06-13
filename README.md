@@ -32,7 +32,7 @@ python3 -m pip install -e ./notion-mirror
 Notion 페이지·데이터베이스를 Obsidian 볼트로 미러링(블록→마크다운, 에셋 다운로드, 증분 동기화).
 - 토큰: 환경변수, `~/.notion_env`, 또는 `~/.hermes/.env`의 `DATARIZE_NOTION_API_TOKEN` / `NOTION_API_KEY` / `NOTION_API_TOKEN`
 - 출력 경로: `--output` 또는 `NOTION_MIRROR_OUTPUT_DIR`
-- Mac Mini 기본 출력 경로: `~/ObsidianVault-Datarize/03_Resources/Notion Mirror`
+- Mac Mini 기본 출력 경로: `~/ObsidianVault-Datarize/03_Resources/Notion Mirror/notion`
 - 주요 명령: `notion-mirror sync <id> [--recursive/--no-recursive]`, `notion-mirror sync-all [--since-last] [--dry-run] [--limit N] [--pages-only|--databases-only]`, `notion-mirror status`
 - 의존성: `typer`, `notion-client`, `rich`, `httpx`
 

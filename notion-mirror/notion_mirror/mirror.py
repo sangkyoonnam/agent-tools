@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
@@ -60,6 +61,100 @@ def build_frontmatter(page: dict, sync_status: str = "complete") -> str:
         "---",
     ]
     return "\n".join(lines)
+
+
+def _split_frontmatter(content: str) -> tuple[list[str], str]:
+    """Return frontmatter lines and body for a Markdown document.
+
+    If the document has no YAML frontmatter, start with an empty frontmatter
+    and keep the full content as body.
+    """
+    if not content.startswith("---\n"):
+        return [], content
+    end = content.find("\n---", 4)
+    if end == -1:
+        return [], content
+    fm = content[4:end].splitlines()
+    body = content[end + len("\n---") :]
+    if body.startswith("\n"):
+        body = body[1:]
+    return fm, body
+
+
+def _set_frontmatter_field(lines: list[str], key: str, value: str) -> list[str]:
+    replacement = f"{key}: {value}"
+    for idx, line in enumerate(lines):
+        if line.startswith(f"{key}:"):
+            lines[idx] = replacement
+            return lines
+    lines.append(replacement)
+    return lines
+
+
+def set_frontmatter_status(filepath: Path, status: str) -> None:
+    """Set sync_status in a Markdown file without deleting its body."""
+    content = filepath.read_text(encoding="utf-8")
+    fm, body = _split_frontmatter(content)
+    fm = _set_frontmatter_field(fm, "sync_status", status)
+    filepath.write_text("---\n" + "\n".join(fm) + "\n---\n\n" + body, encoding="utf-8")
+
+
+def mark_markdown_deleted(filepath: Path, reason: str = "notion_deleted") -> None:
+    """Mark a mirrored Markdown file as deleted instead of removing it."""
+    content = filepath.read_text(encoding="utf-8")
+    fm, body = _split_frontmatter(content)
+    fm = _set_frontmatter_field(fm, "sync_status", "deleted")
+    fm = _set_frontmatter_field(fm, "delete_reason", reason)
+    fm = _set_frontmatter_field(fm, "deleted_at", datetime.now(timezone.utc).isoformat())
+    filepath.write_text("---\n" + "\n".join(fm) + "\n---\n\n" + body, encoding="utf-8")
+
+
+def _frontmatter_value(filepath: Path, key: str) -> str | None:
+    try:
+        content = filepath.read_text(encoding="utf-8", errors="replace")[:4000]
+    except OSError:
+        return None
+    fm, _body = _split_frontmatter(content)
+    for line in fm:
+        if line.startswith(f"{key}:"):
+            value = line.split(":", 1)[1].strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {'\"', "'"}:
+                return value[1:-1]
+            return value
+    return None
+
+
+def _is_not_found_error(exc: Exception) -> bool:
+    text = repr(exc).lower()
+    return "object_not_found" in text or "not_found" in text or "404" in text
+
+
+def mark_deleted_remote_pages(client: NotionMirrorClient, mirror_dir: Path) -> list[Path]:
+    """Mark local mirror notes as deleted when Notion says they are gone.
+
+    This never removes local Markdown files. It scans existing `.md` files for a
+    `notion_id` frontmatter field, retrieves the remote page, and marks the
+    local note `sync_status: deleted` when the page is archived, in_trash, or no
+    longer accessible by ID.
+    """
+    marked: list[Path] = []
+    for path in mirror_dir.rglob("*.md"):
+        if _frontmatter_value(path, "sync_status") == "deleted":
+            continue
+        notion_id = _frontmatter_value(path, "notion_id")
+        if not notion_id:
+            continue
+        try:
+            page = client.get_page(notion_id)
+        except Exception as exc:
+            if _is_not_found_error(exc):
+                mark_markdown_deleted(path, reason="notion_not_found")
+                marked.append(path)
+            continue
+        if page.get("archived") or page.get("in_trash"):
+            mark_markdown_deleted(path, reason="notion_archived")
+            marked.append(path)
+    return marked
 
 
 def _finalize_frontmatter(filepath: Path):

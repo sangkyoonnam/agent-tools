@@ -18,7 +18,33 @@ class ChangedNote:
     sub_group: str
 
 
+def _frontmatter_title(path: Path) -> str | None:
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")[:4000]
+    except OSError:
+        return None
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---", 4)
+    if end == -1:
+        return None
+    for line in text[4:end].splitlines():
+        if line.startswith("title:"):
+            value = line.split(":", 1)[1].strip()
+            if len(value) >= 2 and value[0] == value[-1] == '"':
+                try:
+                    import json
+                    return json.loads(value)
+                except Exception:
+                    return value.strip('"')
+            return value
+    return None
+
+
 def _clean_title_from_filename(path: Path) -> str:
+    fm_title = _frontmatter_title(path)
+    if fm_title:
+        return fm_title
     name = path.stem
     # mirror filenames usually end with " [uuid]". Keep the human part.
     return re.sub(r"\s+\[[0-9a-fA-F-]{8,}\]$", "", name).strip() or path.stem

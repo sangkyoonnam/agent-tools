@@ -5,7 +5,7 @@ import json
 DEFAULT_OUTPUT_DIR = Path(
     os.environ.get(
         "NOTION_MIRROR_OUTPUT_DIR",
-        Path.home() / "ObsidianVault-Datarize" / "03_Resources" / "Notion Mirror" / "notion",
+        Path.home() / "ObsidianVault-Datarize" / "03_Resources" / "Notion Mirror",
     )
 ).expanduser()
 STATE_FILE = Path.home() / ".notion_mirror_state.json"

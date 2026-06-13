@@ -21,14 +21,22 @@ class NotionMirrorClient:
             time.sleep(self._min_interval - elapsed)
         self._last_request = time.time()
 
-    def search_all(self, filter_type: str | None = None, last_edited_after: str | None = None) -> list[dict]:
-        """Search entire workspace. filter_type: 'page' or 'database'."""
+    def search_all(
+        self,
+        filter_type: str | None = None,
+        last_edited_after: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Search workspace. filter_type: 'page' or 'database'.
+
+        Use limit for bounded smoke tests against large workspaces.
+        """
         results = []
         cursor = None
 
         while True:
             self._throttle()
-            params: dict = {"page_size": 100}
+            params: dict = {"page_size": min(100, limit or 100)}
             if filter_type == "page":
                 params["filter"] = {"value": "page", "property": "object"}
             # database filter not supported by API; filter client-side
@@ -49,6 +57,8 @@ class NotionMirrorClient:
 
             results.extend(items)
 
+            if limit is not None and len(results) >= limit:
+                return results[:limit]
             if not resp.get("has_more"):
                 break
             cursor = resp.get("next_cursor")

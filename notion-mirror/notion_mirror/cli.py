@@ -30,7 +30,7 @@ def _get_client() -> NotionMirrorClient:
 def sync(
     target_id: str = typer.Argument(help="Notion page or database ID to sync"),
     output_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--output", "-o", help="Output directory"),
-    recursive: bool = typer.Option(False, "--recursive", "-r", help="Recursively sync child pages"),
+    recursive: bool = typer.Option(False, "--recursive/--no-recursive", "-r", help="Recursively sync child pages"),
     since_last: bool = typer.Option(False, "--since-last", help="Only sync items changed since last sync"),
 ):
     """Sync a specific page or database by ID."""
@@ -44,10 +44,17 @@ def sync_all_cmd(
     output_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--output", "-o", help="Output directory"),
     since_last: bool = typer.Option(False, "--since-last", help="Only sync items changed since last sync"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without writing"),
+    limit: int | None = typer.Option(None, "--limit", "-n", min=1, help="Limit pages/databases searched; useful for smoke tests"),
+    pages_only: bool = typer.Option(False, "--pages-only", help="Only search/sync pages"),
+    databases_only: bool = typer.Option(False, "--databases-only", help="Only search/sync databases"),
 ):
     """Sync entire workspace. Use --since-last for incremental sync."""
     client = _get_client()
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if pages_only and databases_only:
+        console.print("[red]Use only one of --pages-only or --databases-only.[/red]")
+        raise typer.Exit(2)
 
     if dry_run:
         console.print("[blue]Dry run — listing items to sync[/blue]")
@@ -55,8 +62,8 @@ def sync_all_cmd(
         state = load_state()
         last_sync = state.get("last_sync") if since_last else None
 
-        pages = client.search_all(filter_type="page", last_edited_after=last_sync)
-        databases = client.search_all(filter_type="database", last_edited_after=last_sync)
+        pages = [] if databases_only else client.search_all(filter_type="page", last_edited_after=last_sync, limit=limit)
+        databases = [] if pages_only else client.search_all(filter_type="database", last_edited_after=last_sync, limit=limit)
 
         console.print(f"\n[bold]Pages ({len(pages)}):[/bold]")
         for p in pages:
@@ -72,7 +79,7 @@ def sync_all_cmd(
         console.print(f"\n[dim]Total: {len(pages) + len(databases)} items[/dim]")
         return
 
-    sync_all(client, output_dir, since_last=since_last)
+    sync_all(client, output_dir, since_last=since_last, limit=limit, pages_only=pages_only, databases_only=databases_only)
 
 
 @app.command()

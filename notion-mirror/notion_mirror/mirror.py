@@ -341,6 +341,9 @@ def sync_all(
     client: NotionMirrorClient,
     output_dir: Path,
     since_last: bool = False,
+    limit: int | None = None,
+    pages_only: bool = False,
+    databases_only: bool = False,
 ):
     state = load_state()
     last_sync = state.get("last_sync") if since_last else None
@@ -352,13 +355,18 @@ def sync_all(
     else:
         console.print("[blue]Full workspace sync[/blue]")
 
-    console.print("[dim]Searching pages...[/dim]")
-    pages = client.search_all(filter_type="page", last_edited_after=last_sync)
-    console.print(f"[dim]Found {len(pages)} pages[/dim]")
+    pages = []
+    databases = []
 
-    console.print("[dim]Searching databases...[/dim]")
-    databases = client.search_all(filter_type="database", last_edited_after=last_sync)
-    console.print(f"[dim]Found {len(databases)} databases[/dim]")
+    if not databases_only:
+        console.print("[dim]Searching pages...[/dim]")
+        pages = client.search_all(filter_type="page", last_edited_after=last_sync, limit=limit)
+        console.print(f"[dim]Found {len(pages)} pages[/dim]")
+
+    if not pages_only:
+        console.print("[dim]Searching databases...[/dim]")
+        databases = client.search_all(filter_type="database", last_edited_after=last_sync, limit=limit)
+        console.print(f"[dim]Found {len(databases)} databases[/dim]")
 
     total = len(pages) + len(databases)
     if total == 0:

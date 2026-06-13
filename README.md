@@ -30,10 +30,11 @@ python3 -m pip install -e ./notion-mirror
 
 ### notion-mirror
 Notion 페이지·데이터베이스를 Obsidian 볼트로 미러링(블록→마크다운, 에셋 다운로드, 증분 동기화).
-- 토큰: `~/.notion_env`의 `DATARIZE_NOTION_API_TOKEN`
-- 출력 경로: `--output` 또는 `NOTION_MIRROR_OUTPUT_DIR`(기본 `~/datarize-vault/notion`)
-- 주요 명령: `notion-mirror sync <id> [-r]`, `notion-mirror sync-all [--since-last] [--dry-run]`, `notion-mirror status`
-- 의존성: `typer`, `notion-client`, `rich`, `httpx`(런타임)
+- 토큰: 환경변수, `~/.notion_env`, 또는 `~/.hermes/.env`의 `DATARIZE_NOTION_API_TOKEN` / `NOTION_API_KEY` / `NOTION_API_TOKEN`
+- 출력 경로: `--output` 또는 `NOTION_MIRROR_OUTPUT_DIR`
+- Mac Mini 기본 출력 경로: `~/ObsidianVault-Datarize/03_Resources/Notion Mirror`
+- 주요 명령: `notion-mirror sync <id> [--recursive/--no-recursive]`, `notion-mirror sync-all [--since-last] [--dry-run] [--limit N] [--pages-only|--databases-only]`, `notion-mirror status`
+- 의존성: `typer`, `notion-client`, `rich`, `httpx`
 
 ### ytscribe
 YouTube URL을 받아 메타데이터·자막을 모으고, `claude` CLI로 핵심 순간(5–10개)·한국어 요약을 뽑은 뒤, `ffmpeg`로 해당 타임스탬프 프레임을 떠서 Obsidian `_inbox`에 노트 한 장으로 저장.

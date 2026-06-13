@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
+import unicodedata
 
 
 @dataclass
@@ -52,8 +53,8 @@ def _clean_title_from_filename(path: Path) -> str:
 
 def _group_for(rel_path: Path) -> tuple[str, str]:
     parts = rel_path.parts
-    top = parts[0] if len(parts) >= 1 else "_root"
-    sub = parts[1] if len(parts) >= 2 else "_root"
+    top = unicodedata.normalize("NFC", parts[0]) if len(parts) >= 1 else "_root"
+    sub = unicodedata.normalize("NFC", parts[1]) if len(parts) >= 2 else "_root"
 
     # Datarize legacy mirror has two especially important top-level axes:
     # - 프로젝트 [...]       => product/project axis

@@ -1,0 +1,24 @@
+[project]
+name = "ytscribe"
+version = "0.1.0"
+description = "YouTube → Obsidian note with AI-picked frames (local-only; if published, rename to nsb-ytscribe)"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "yt-dlp>=2024.10",
+    "youtube-transcript-api>=0.6",
+    "jinja2>=3.1",
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+whisper = ["faster-whisper>=1.0"]
+scenes = ["scenedetect>=0.6"]
+
+[project.scripts]
+ytscribe = "ytscribe.cli:app"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

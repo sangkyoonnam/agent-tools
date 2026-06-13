@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+
+# Local one-off script (not part of the 3 tools — keep out of the repo for now)
+rename_to_flyway.py
+
+# Secrets / local state (never commit)
+.notion_env
+.env

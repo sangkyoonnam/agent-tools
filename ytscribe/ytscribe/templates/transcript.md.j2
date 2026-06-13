@@ -1,0 +1,22 @@
+---
+source: {{ source_url }}
+channel: {{ channel }}
+duration: {{ duration_human }}
+{% if published %}published: {{ published }}
+{% endif %}captured: {{ captured }}
+type: video-transcript
+status: source
+tags:
+  - video
+  - youtube
+  - transcript
+---
+
+# {{ title }} — Transcript
+
+> [!info] Source
+> [Watch on YouTube]({{ source_url }}) · {{ channel }} · {{ duration_human }}
+> Curated note: [[{{ note_basename }}]]
+
+{% for line in transcript_lines %}{{ line }}
+{% endfor %}

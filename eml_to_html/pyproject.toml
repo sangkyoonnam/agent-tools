@@ -1,0 +1,16 @@
+[project]
+name = "eml-to-html"
+version = "0.1.0"
+description = "EML email files to HTML converter"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+eml-to-html = "eml_to_html.cli:app"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,48 @@
+---
+source: {{ source_url }}
+channel: {{ channel }}
+{% if channel_url %}channel_url: {{ channel_url }}
+{% endif %}duration: {{ duration_human }}
+{% if published %}published: {{ published }}
+{% endif %}captured: {{ captured }}
+type: video-note
+status: inbox
+tags:
+  - video
+  - youtube
+{% for theme in themes %}  - {{ theme }}
+{% endfor %}---
+
+# {{ title }}
+
+> [!info] Source
+> [Watch on YouTube]({{ source_url }}) · {{ channel }} · {{ duration_human }}
+> Full transcript: [[{{ transcript_basename }}]]
+
+## 핵심 요약
+
+{{ summary }}
+
+## 주제
+
+{% for theme in themes %}- [[{{ theme }}]]
+{% endfor %}
+
+## 주요 순간
+
+{% for m in moments %}### [{{ m.t_hms }}]({{ source_url }}&t={{ m.t }}s) — {{ m.caption }}
+
+![[images/frame-{{ m.t_filename }}.jpg]]
+
+> {{ m.reason }}
+
+{% endfor %}
+
+## 핵심 인용
+
+{% for q in key_quotes %}- "{{ q.text }}" — [{{ q.t_hms }}]({{ source_url }}&t={{ q.t }}s)
+{% endfor %}
+
+## 추가 분석
+
+{{ note_body_md }}

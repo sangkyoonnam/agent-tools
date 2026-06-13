@@ -1,0 +1,17 @@
+[project]
+name = "notion-mirror"
+version = "0.1.0"
+description = "Notion to Obsidian mirror tool"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9.0",
+    "notion-client>=2.0.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+notion-mirror = "notion_mirror.cli:app"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

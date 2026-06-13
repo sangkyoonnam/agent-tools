@@ -29,10 +29,14 @@ class NotionMirrorClient:
     ) -> list[dict]:
         """Search workspace. filter_type: 'page' or 'database'.
 
-        Use limit for bounded smoke tests against large workspaces.
+        Use limit for bounded smoke tests against large workspaces. When
+        last_edited_after is supplied, ask Notion to sort newest-first and stop
+        paging once results are older than the cutoff. Without this early-stop,
+        incremental scans in large workspaces have to walk the whole workspace.
         """
         results = []
         cursor = None
+        reached_cutoff = False
 
         while True:
             self._throttle()
@@ -40,6 +44,8 @@ class NotionMirrorClient:
             if filter_type == "page":
                 params["filter"] = {"value": "page", "property": "object"}
             # database filter not supported by API; filter client-side
+            if last_edited_after:
+                params["sort"] = {"direction": "descending", "timestamp": "last_edited_time"}
             if cursor:
                 params["start_cursor"] = cursor
 
@@ -50,16 +56,19 @@ class NotionMirrorClient:
                 items = [i for i in items if i.get("object") == "database"]
 
             if last_edited_after:
-                items = [
-                    item for item in items
-                    if item.get("last_edited_time", "") >= last_edited_after
-                ]
+                filtered = []
+                for item in items:
+                    if item.get("last_edited_time", "") >= last_edited_after:
+                        filtered.append(item)
+                    else:
+                        reached_cutoff = True
+                items = filtered
 
             results.extend(items)
 
             if limit is not None and len(results) >= limit:
                 return results[:limit]
-            if not resp.get("has_more"):
+            if reached_cutoff or not resp.get("has_more"):
                 break
             cursor = resp.get("next_cursor")
 

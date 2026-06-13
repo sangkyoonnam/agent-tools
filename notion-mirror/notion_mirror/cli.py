@@ -82,6 +82,28 @@ def sync_all_cmd(
     sync_all(client, output_dir, since_last=since_last, limit=limit, pages_only=pages_only, databases_only=databases_only)
 
 
+@app.command("daily-context")
+def daily_context_cmd(
+    mirror_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--mirror-dir", "-m", help="Notion mirror body directory"),
+    since_hours: int = typer.Option(24, "--since-hours", min=1, help="Look back this many hours using file mtimes"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Optional markdown output path"),
+    max_items: int = typer.Option(200, "--max-items", min=1, help="Maximum changed notes to include"),
+):
+    """Render a team/product grouped daily context report from changed mirror notes."""
+    from datetime import datetime, timedelta, timezone
+    from .context import collect_changed_notes, render_daily_context_markdown
+
+    since = datetime.now(timezone.utc) - timedelta(hours=since_hours)
+    notes = collect_changed_notes(mirror_dir, since=since, max_items=max_items)
+    markdown = render_daily_context_markdown(notes, mirror_dir=mirror_dir, since=since)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(markdown, encoding="utf-8")
+        console.print(f"[green]Wrote daily context:[/green] {output}")
+    else:
+        console.print(markdown)
+
+
 @app.command()
 def status():
     """Show last sync status."""
